@@ -146,6 +146,6 @@ func TestGridworldAgent() {
 	agent.Evaluate(100, 300) // Evaluate on 100 episodes
 }
 
-func main() {
-	TestGridworldAgent()
-}
+// func main() {
+// 	TestGridworldAgent()
+// }

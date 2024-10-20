@@ -46,8 +46,8 @@ func NewDQNAgent(env *Gridworld) *DQNAgent {
 		epsilonDecay: 0.999985,
 		learningRate: 0.0001,
 		temperature:  1.0,
-		model:        NewNeuralNetwork(env.stateSize, []int{24, 16}, env.actionSize, "relu"),
-		targetModel:  NewNeuralNetwork(env.stateSize, []int{24, 16}, env.actionSize, "relu"),
+		model:        NewNeuralNetwork(env.stateSize, []int{24, 16}, env.actionSize, "mish"),
+		targetModel:  NewNeuralNetwork(env.stateSize, []int{24, 16}, env.actionSize, "mish"),
 	}
 	return agent
 }
