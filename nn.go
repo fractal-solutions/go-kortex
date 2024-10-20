@@ -182,7 +182,7 @@ func (nn *NeuralNetwork) huberLoss(target, output []float64) float64 {
 }
 
 // Backpropagation to update weights and biases
-func (nn *NeuralNetwork) backward(input, target []float64, learningRate float64) {
+func (nn *NeuralNetwork) backward(target []float64, learningRate float64) {
 	deltas := make([][]float64, len(nn.hiddenLayers)+1)
 	output := nn.layerOutputs[len(nn.layerOutputs)-1]
 
@@ -235,7 +235,7 @@ func (nn *NeuralNetwork) train(trainingData []map[string][]float64, learningRate
 			output := nn.forward(input)
 			loss := nn.huberLoss(target, output)
 			totalLoss += loss
-			nn.backward(input, target, learningRate)
+			nn.backward(target, learningRate)
 		}
 
 		if epoch%1000 == 0 {

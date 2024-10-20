@@ -18,7 +18,7 @@ func testXOR() {
 	network := NewNeuralNetwork(2, []int{2}, 1, "relu")
 
 	// Train the network
-	network.train(trainingData, 0.1, 10000)
+	network.train(trainingData, 0.1, 1000)
 
 	// Test the network
 	fmt.Println("TESTING XOR...")
@@ -64,7 +64,7 @@ func testPolynomial() {
 func testFibonacci() {
 	// Fibonacci data
 	fibonacci := []float64{0, 1}
-	for i := 2; i < 10; i++ {
+	for i := 2; i < 11; i++ {
 		fibonacci = append(fibonacci, fibonacci[i-1]+fibonacci[i-2])
 	}
 
@@ -77,10 +77,10 @@ func testFibonacci() {
 	}
 
 	// Initialize Neural Network with 1 input, 20 and 10 hidden neurons, and 1 output
-	network := NewNeuralNetwork(1, []int{20, 10}, 1, "swish")
+	network := NewNeuralNetwork(1, []int{20, 10, 10}, 1, "swish")
 
 	// Train the network
-	network.train(trainingData, 0.001, 20000)
+	network.train(trainingData, 0.0001, 20000)
 
 	// Test the network
 	fmt.Println("TESTING Fibonacci sequence prediction...")
@@ -90,9 +90,9 @@ func testFibonacci() {
 	}
 }
 
-func main() {
-	// Run all tests
-	testXOR()
-	testPolynomial()
-	testFibonacci()
-}
+// func main() {
+// 	// Run all tests
+// 	//testXOR()
+// 	//testPolynomial()
+// 	testFibonacci()
+// }
