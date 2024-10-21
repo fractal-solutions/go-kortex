@@ -35,15 +35,21 @@ func (rnn *RecurrentNeuralNetwork) forward(inputs [][]float64) []float64 {
 	timeSteps := len(inputs)
 	var finalOutput []float64
 
+	// Reset the layer inputs and outputs to store each time step's values
+	rnn.layerInputs = [][]float64{}
+	rnn.layerOutputs = [][]float64{}
+
 	// Iterate over each time step
 	for t := 0; t < timeSteps; t++ {
-		layerInput := inputs[t] // Input at the current time step (ensure it's 1D here)
-		//fmt.Println("41 layerInput ", layerInput)
+		layerInput := inputs[t] // Input at the current time step
 
 		// Ensure the input size matches the expected input size
 		if len(layerInput) != rnn.inputSize {
 			panic(fmt.Sprintf("Input size mismatch at time step %d: expected %d, got %d", t, rnn.inputSize, len(layerInput)))
 		}
+
+		// Store the input for this time step
+		//rnn.layerInputs = append(rnn.layerInputs, layerInput)
 
 		// Iterate over each hidden layer
 		for i := 0; i < len(rnn.hiddenLayers); i++ {
@@ -67,8 +73,13 @@ func (rnn *RecurrentNeuralNetwork) forward(inputs [][]float64) []float64 {
 			}
 
 			// Update hidden states for the next time step
-			rnn.hiddenStates[i] = layerOutput // This should remain a 1D array
-			layerInput = layerOutput          // Input to the next layer is the output of the current layer (also 1D)
+			rnn.hiddenStates[i] = layerOutput
+
+			// Store the layer output for this time step
+			rnn.layerInputs = append(rnn.layerInputs, layerInput)
+			rnn.layerOutputs = append(rnn.layerOutputs, layerOutput)
+
+			layerInput = layerOutput
 		}
 
 		// Output layer (compute output at the current time step)
@@ -80,6 +91,10 @@ func (rnn *RecurrentNeuralNetwork) forward(inputs [][]float64) []float64 {
 			}
 			finalOutput[i] = rnn.activate(neuron)
 		}
+
+		// Store the final output for this time step
+		rnn.layerInputs = append(rnn.layerInputs, layerInput)
+		rnn.layerOutputs = append(rnn.layerOutputs, finalOutput)
 	}
 
 	// Return the final output after the last time step
@@ -89,15 +104,15 @@ func (rnn *RecurrentNeuralNetwork) forward(inputs [][]float64) []float64 {
 // Backpropagation Through Time (BPTT) for RNN
 func (rnn *RecurrentNeuralNetwork) backwardBPTT(targets []float64, learningRate float64) {
 	timeSteps := len(targets)
-	if false /* timeSteps <= 1 */ {
-		rnn.backward(targets, learningRate)
-	} else {
-		for t := timeSteps - 1; t > 0; t-- {
+	//fmt.Println(timeSteps, " number of timesteps bptt")
+	if timeSteps > 0 {
+		for t := timeSteps; t > 0; t-- {
 			// Perform backpropagation for each time step
-			rnn.backward([]float64{targets[t]}, learningRate)
+			rnn.backward(targets, learningRate)
 		}
+	} else {
+		rnn.backward(targets, learningRate)
 	}
-
 }
 
 // Train the RNN using time-stepped sequences.
@@ -109,16 +124,13 @@ func (rnn *RecurrentNeuralNetwork) train(trainingData [][][]float64, targets [][
 			inputSequence := trainingData[i]
 			//fmt.Println("input seq ", (inputSequence), " length ", (len(inputSequence)))
 			target := targets[i]
+			//fmt.Println("target seq ", (target), " length ", (len(target)))
 
 			// Forward pass for the entire sequence
 			output := rnn.forward(inputSequence)
 
 			// Compute loss (e.g., Mean Squared Error)
-			loss := 0.0
-			for j := 0; j < len(output); j++ {
-				error := target[j] - output[j]
-				loss += error * error
-			}
+			loss := rnn.meanSquaredErrorLoss(target, output)
 			totalLoss += loss
 
 			// Backpropagation Through Time (BPTT)
@@ -126,7 +138,7 @@ func (rnn *RecurrentNeuralNetwork) train(trainingData [][][]float64, targets [][
 		}
 
 		// Print the loss at regular intervals
-		if epoch%100 == 0 {
+		if epoch%10 == 0 {
 			fmt.Printf("Epoch %d, Loss: %f\n", epoch, totalLoss/float64(len(trainingData)))
 		}
 	}

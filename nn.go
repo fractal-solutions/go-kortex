@@ -240,7 +240,7 @@ func (nn *NeuralNetwork) forward(input []float64) []float64 {
 		for j := 0; j < len(layerInput); j++ {
 			neuron += layerInput[j] * nn.weights[len(nn.weights)-1][j][i]
 		}
-		output[i] = neuron
+		output[i] = nn.activate(neuron) ///ACTIVATING OUTPUT LAYER< EXPERIMENTAL TWEAK
 	}
 	nn.layerInputs = append(nn.layerInputs, layerInput)
 	nn.layerOutputs = append(nn.layerOutputs, output)

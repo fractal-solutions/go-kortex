@@ -90,9 +90,9 @@ func testFibonacci() {
 	}
 }
 
-func main() {
-	// Run all tests
-	//testXOR()
-	testPolynomial()
-	//testFibonacci()
-}
+// func main() {
+// 	// Run all tests
+// 	//testXOR()
+// 	testPolynomial()
+// 	//testFibonacci()
+// }
