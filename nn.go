@@ -27,7 +27,7 @@ func NewNeuralNetwork(inputSize int, hiddenLayers []int, outputSize int, activat
 		hiddenLayers:   hiddenLayers,
 		outputSize:     outputSize,
 		activationType: activationType,
-		clipThreshold:  1.0, // 0.1 to 1 to 5 for gradient clipping
+		clipThreshold:  0.5, // 0.1 to 1 to 5 for gradient clipping
 	}
 
 	// Initialize weights and biases
@@ -52,8 +52,9 @@ func randomMatrix(rows, cols, inputSize int) [][]float64 {
 		matrix[i] = make([]float64, cols)
 		for j := range matrix[i] {
 			// Initialize with small random values
-			matrix[i][j] = rand.Float64() * math.Sqrt(2/float64(rows))
+			//matrix[i][j] = rand.Float64() * math.Sqrt(1/float64(rows+cols))
 			//matrix[i][j] = rand.Float64() * math.Sqrt(2.0/float64(inputSize))
+			matrix[i][j] = rand.Float64() * 0.01 // Smaller range
 
 		}
 	}
@@ -240,7 +241,7 @@ func (nn *NeuralNetwork) forward(input []float64) []float64 {
 		for j := 0; j < len(layerInput); j++ {
 			neuron += layerInput[j] * nn.weights[len(nn.weights)-1][j][i]
 		}
-		output[i] = nn.activate(neuron) ///ACTIVATING OUTPUT LAYER< EXPERIMENTAL TWEAK
+		output[i] = neuron //nn.activate(neuron) ///ACTIVATING OUTPUT LAYER< EXPERIMENTAL TWEAK
 	}
 	nn.layerInputs = append(nn.layerInputs, layerInput)
 	nn.layerOutputs = append(nn.layerOutputs, output)
@@ -279,8 +280,9 @@ func (nn *NeuralNetwork) backward(target []float64, learningRate float64) {
 
 	// Output layer delta
 	outputDelta := make([]float64, nn.outputSize)
-	for i := 0; i < nn.outputSize; i++ {
+	for i := 0; i < len(target); /*nn.outputSize*/ i++ {
 		outputDelta[i] = target[i] - output[i]
+		//fmt.Println("target[i]: ", target[i], " i  ", i, "target ", len(target), " len | output ", len(output), " len")
 	}
 	deltas[len(deltas)-1] = outputDelta
 
@@ -289,8 +291,10 @@ func (nn *NeuralNetwork) backward(target []float64, learningRate float64) {
 		layerDelta := make([]float64, nn.hiddenLayers[i])
 		for j := 0; j < nn.hiddenLayers[i]; j++ {
 			error := 0.0
-			for k := 0; k < len(deltas[i+1]); k++ {
-				error += deltas[i+1][k] * nn.weights[i+1][j][k]
+			if i+1 < len(deltas) { // Ensure deltas[i+1] exists
+				for k := 0; k < len(deltas[i+1]); k++ {
+					error += deltas[i+1][k] * nn.weights[i+1][j][k]
+				}
 			}
 			layerDelta[j] = error * nn.activateDerivative(nn.layerOutputs[i][j])
 		}
@@ -304,28 +308,32 @@ func (nn *NeuralNetwork) backward(target []float64, learningRate float64) {
 	for i := 0; i < len(nn.weights); i++ {
 		for j := 0; j < len(nn.weights[i]); j++ {
 			for k := 0; k < len(nn.weights[i][j]); k++ {
-				gradient := learningRate * deltas[i][k] * nn.layerInputs[i][j]
-				// Gradient clipping
-				if gradient > nn.clipThreshold {
-					gradient = nn.clipThreshold
-				} else if gradient < -nn.clipThreshold {
-					gradient = -nn.clipThreshold
+				if len(deltas[i]) > k { // Check deltas[i] length
+					gradient := learningRate * deltas[i][k] * nn.layerInputs[i][j]
+					// Gradient clipping
+					if gradient > nn.clipThreshold {
+						gradient = nn.clipThreshold
+					} else if gradient < -nn.clipThreshold {
+						gradient = -nn.clipThreshold
+					}
+					nn.weights[i][j][k] += gradient
 				}
-				nn.weights[i][j][k] += gradient
 			}
 		}
 	}
 
 	for i := 0; i < len(nn.biases); i++ {
 		for j := 0; j < len(nn.biases[i]); j++ {
-			gradient := learningRate * deltas[i][j]
-			// Gradient clipping
-			if gradient > nn.clipThreshold {
-				gradient = nn.clipThreshold
-			} else if gradient < -nn.clipThreshold {
-				gradient = -nn.clipThreshold
+			if len(deltas[i]) > j { // Check deltas[i] length
+				gradient := learningRate * deltas[i][j]
+				// Gradient clipping
+				if gradient > nn.clipThreshold {
+					gradient = nn.clipThreshold
+				} else if gradient < -nn.clipThreshold {
+					gradient = -nn.clipThreshold
+				}
+				nn.biases[i][j] += gradient
 			}
-			nn.biases[i][j] += gradient
 		}
 	}
 }

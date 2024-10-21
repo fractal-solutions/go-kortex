@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
+	"time"
 )
 
 type RecurrentNeuralNetwork struct {
@@ -24,7 +26,7 @@ func NewRecurrentNeuralNetwork(inputSize int, hiddenLayers []int, outputSize int
 	// Initialize recurrent weights
 	for i := range hiddenLayers {
 		previousSize := hiddenLayers[i]
-		rnn.recurrentWeights = append(rnn.recurrentWeights, randomMatrix(previousSize, hiddenLayers[i], inputSize))
+		rnn.recurrentWeights = append(rnn.recurrentWeights, randomMatrix(previousSize, hiddenLayers[i], hiddenLayers[i]))
 	}
 
 	return rnn
@@ -101,12 +103,20 @@ func (rnn *RecurrentNeuralNetwork) forward(inputs [][]float64) []float64 {
 	return finalOutput
 }
 
+func (rnn *RecurrentNeuralNetwork) resetHiddenStates() {
+	for i := range rnn.hiddenStates {
+		for j := range rnn.hiddenStates[i] {
+			rnn.hiddenStates[i][j] = rand.Float64() * 0.01 // Small random values
+		}
+	}
+}
+
 // Backpropagation Through Time (BPTT) for RNN
 func (rnn *RecurrentNeuralNetwork) backwardBPTT(targets []float64, learningRate float64) {
 	timeSteps := len(targets)
 	//fmt.Println(timeSteps, " number of timesteps bptt")
-	if timeSteps > 0 {
-		for t := timeSteps; t > 0; t-- {
+	if timeSteps > 1 {
+		for t := timeSteps - 1; t >= 0; t-- {
 			// Perform backpropagation for each time step
 			rnn.backward(targets, learningRate)
 		}
@@ -117,10 +127,15 @@ func (rnn *RecurrentNeuralNetwork) backwardBPTT(targets []float64, learningRate 
 
 // Train the RNN using time-stepped sequences.
 func (rnn *RecurrentNeuralNetwork) train(trainingData [][][]float64, targets [][]float64, learningRate float64, epochs int) {
+
+	start := time.Now()
+	fmt.Println("")
+	fmt.Println("TRAINING")
+
 	for epoch := 0; epoch < epochs; epoch++ {
 		totalLoss := 0.0
-
 		for i := 0; i < len(trainingData); i++ {
+			rnn.resetHiddenStates()
 			inputSequence := trainingData[i]
 			//fmt.Println("input seq ", (inputSequence), " length ", (len(inputSequence)))
 			target := targets[i]
@@ -130,7 +145,7 @@ func (rnn *RecurrentNeuralNetwork) train(trainingData [][][]float64, targets [][
 			output := rnn.forward(inputSequence)
 
 			// Compute loss (e.g., Mean Squared Error)
-			loss := rnn.meanSquaredErrorLoss(target, output)
+			loss := rnn.huberLoss(target, output)
 			totalLoss += loss
 
 			// Backpropagation Through Time (BPTT)
@@ -142,4 +157,8 @@ func (rnn *RecurrentNeuralNetwork) train(trainingData [][][]float64, targets [][
 			fmt.Printf("Epoch %d, Loss: %f\n", epoch, totalLoss/float64(len(trainingData)))
 		}
 	}
+
+	elapsed := time.Since(start)
+	fmt.Printf("Time elapsed: %s\n", elapsed)
+	fmt.Println("")
 }
