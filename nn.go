@@ -18,10 +18,11 @@ type NeuralNetwork struct {
 	layerInputs    [][]float64
 	layerOutputs   [][]float64
 	clipThreshold  float64
+	learningRate   float64
 }
 
 // NewNeuralNetwork initializes a new neural network with given parameters.
-func NewNeuralNetwork(inputSize int, hiddenLayers []int, outputSize int, activationType string) *NeuralNetwork {
+func NewNeuralNetwork(inputSize int, hiddenLayers []int, outputSize int, activationType string, learningRate float64) *NeuralNetwork {
 	nn := &NeuralNetwork{
 		inputSize:      inputSize,
 		hiddenLayers:   hiddenLayers,
@@ -41,6 +42,8 @@ func NewNeuralNetwork(inputSize int, hiddenLayers []int, outputSize int, activat
 
 	nn.weights = append(nn.weights, randomMatrix(hiddenLayers[len(hiddenLayers)-1], outputSize, inputSize))
 	nn.biases = append(nn.biases, make([]float64, outputSize))
+
+	nn.learningRate = learningRate
 
 	return nn
 }
@@ -249,12 +252,26 @@ func (nn *NeuralNetwork) forward(input []float64) []float64 {
 	return output
 }
 
+// L2 Regularization Loss
+func (nn *NeuralNetwork) l2Regularization(learningRate float64) float64 {
+	l2Penalty := 0.0
+	for _, layerWeights := range nn.weights {
+		for _, neuronWeights := range layerWeights {
+			for _, weight := range neuronWeights {
+				l2Penalty += weight * weight // Sum of squares of weights
+			}
+		}
+	}
+	return learningRate * l2Penalty
+}
+
 // Mean Squared Error Loss
 func (nn *NeuralNetwork) meanSquaredErrorLoss(target, output []float64) float64 {
 	loss := 0.0
 	for i := 0; i < len(target); i++ {
 		loss += math.Pow(target[i]-output[i], 2)
 	}
+	loss += nn.l2Regularization(nn.learningRate)
 	return loss / float64(len(target))
 }
 
@@ -270,6 +287,7 @@ func (nn *NeuralNetwork) huberLoss(target, output []float64) float64 {
 			loss += delta*math.Abs(error) - 0.5*delta // linear loss
 		}
 	}
+	loss += nn.l2Regularization(nn.learningRate)
 	return loss / float64(len(target))
 }
 
@@ -339,7 +357,7 @@ func (nn *NeuralNetwork) backward(target []float64, learningRate float64) {
 }
 
 // Train the neural network using backpropagation
-func (nn *NeuralNetwork) train(trainingData []map[string][]float64, learningRate float64, epochs int) {
+func (nn *NeuralNetwork) train(trainingData []map[string][]float64, epochs int) {
 	// Set a default value for clipThreshold if it's zero
 	if nn.clipThreshold == 0 {
 		nn.clipThreshold = 1.0 // Default value, you can adjust this as needed
@@ -355,7 +373,7 @@ func (nn *NeuralNetwork) train(trainingData []map[string][]float64, learningRate
 			output := nn.forward(input)
 			loss := nn.huberLoss(target, output)
 			totalLoss += loss
-			nn.backward(target, learningRate)
+			nn.backward(target, nn.learningRate)
 		}
 
 		if epoch%1000 == 0 {

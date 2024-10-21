@@ -10,12 +10,13 @@ type RecurrentNeuralNetwork struct {
 	NeuralNetwork
 	hiddenStates     [][]float64   // Hidden states for each hidden layer
 	recurrentWeights [][][]float64 // Recurrent weights for each hidden layer
+	dropoutRate      float64       // Dropout rate
 }
 
 // NewRecurrentNeuralNetwork initializes an RNN with recurrent connections.
-func NewRecurrentNeuralNetwork(inputSize int, hiddenLayers []int, outputSize int, activationType string) *RecurrentNeuralNetwork {
+func NewRecurrentNeuralNetwork(inputSize int, hiddenLayers []int, outputSize int, activationType string, learningRate float64, dropoutRate float64) *RecurrentNeuralNetwork {
 	rnn := &RecurrentNeuralNetwork{
-		NeuralNetwork: *NewNeuralNetwork(inputSize, hiddenLayers, outputSize, activationType),
+		NeuralNetwork: *NewNeuralNetwork(inputSize, hiddenLayers, outputSize, activationType, learningRate),
 	}
 
 	// Initialize hidden states (start with zero)
@@ -29,7 +30,18 @@ func NewRecurrentNeuralNetwork(inputSize int, hiddenLayers []int, outputSize int
 		rnn.recurrentWeights = append(rnn.recurrentWeights, randomMatrix(previousSize, hiddenLayers[i], hiddenLayers[i]))
 	}
 
+	rnn.dropoutRate = dropoutRate
 	return rnn
+}
+
+// Apply dropout to the layer output.
+func (rnn *RecurrentNeuralNetwork) applyDropout(layerOutput []float64, dropoutRate float64) []float64 {
+	for i := range layerOutput {
+		if rand.Float64() < dropoutRate {
+			layerOutput[i] = 0.0 // Set neuron output to 0 with probability of dropoutRate
+		}
+	}
+	return layerOutput
 }
 
 // forward passes the input through the recurrent network for multiple time steps.
@@ -73,6 +85,9 @@ func (rnn *RecurrentNeuralNetwork) forward(inputs [][]float64) []float64 {
 				// Apply the activation function
 				layerOutput[j] = rnn.activate(neuron)
 			}
+
+			// Apply dropout
+			layerOutput = rnn.applyDropout(layerOutput, rnn.dropoutRate)
 
 			// Update hidden states for the next time step
 			rnn.hiddenStates[i] = layerOutput
@@ -118,15 +133,15 @@ func (rnn *RecurrentNeuralNetwork) backwardBPTT(targets []float64, learningRate 
 	if timeSteps > 1 {
 		for t := timeSteps - 1; t >= 0; t-- {
 			// Perform backpropagation for each time step
-			rnn.backward(targets, learningRate)
+			rnn.backward(targets, rnn.learningRate)
 		}
 	} else {
-		rnn.backward(targets, learningRate)
+		rnn.backward(targets, rnn.learningRate)
 	}
 }
 
 // Train the RNN using time-stepped sequences.
-func (rnn *RecurrentNeuralNetwork) train(trainingData [][][]float64, targets [][]float64, learningRate float64, epochs int) {
+func (rnn *RecurrentNeuralNetwork) train(trainingData [][][]float64, targets [][]float64, epochs int) {
 
 	start := time.Now()
 	fmt.Println("")
@@ -149,7 +164,7 @@ func (rnn *RecurrentNeuralNetwork) train(trainingData [][][]float64, targets [][
 			totalLoss += loss
 
 			// Backpropagation Through Time (BPTT)
-			rnn.backwardBPTT(target, learningRate)
+			rnn.backwardBPTT(target, rnn.learningRate)
 		}
 
 		// Print the loss at regular intervals

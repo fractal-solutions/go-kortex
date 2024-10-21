@@ -31,33 +31,33 @@ func main() {
 
 	// Corresponding targets for each sequence (predict the next value in the sequence)
 	targets := [][]float64{
-		{0.2, 0.3}, // Target for sequence 1
-		{0.3, 0.4}, // Target for sequence 2
-		{0.4, 0.5}, // Target for sequence 3
-		{0.5, 0.6}, // Target for sequence 4
-		{0.6, 0.7}, // Target for sequence 5
-		{0.7, 0.8}, // Target for sequence 6
-		{0.8, 0.9}, // Target for sequence 7
-		{0.9, 1.0}, // Target for sequence 8
-		{1.0, 1.1}, // Target for sequence 9
-		{1.1, 1.2}, // Target for sequence 10
-		{1.2, 1.3}, // Target for sequence 11
-		{1.3, 1.4}, // Target for sequence 12
+		{0.3, 0.4}, // Target for sequence 1
+		{0.4, 0.5}, // Target for sequence 2
+		{0.5, 0.6}, // Target for sequence 3
+		{0.6, 0.7}, // Target for sequence 4
+		{0.7, 0.8}, // Target for sequence 5
+		{0.8, 0.9}, // Target for sequence 6
+		{0.9, 1.0}, // Target for sequence 7
+		{1.0, 1.1}, // Target for sequence 8
+		{1.1, 1.2}, // Target for sequence 9
+		{1.2, 1.3}, // Target for sequence 10
+		{1.3, 1.4}, // Target for sequence 11
 		{1.4, 1.5}, // Target for sequence 13
-		{1.5, 1.6}, // Target for sequence 14
-		{1.6, 1.7}, // Target for sequence 15
-		{1.7, 1.8}, // Target for sequence 16
-		{1.8, 1.9}, // Target for sequence 17
-		{1.9, 2.0}, // Target for sequence 18
-		{2.0, 2.1}, // Target for sequence 19
-		{2.1, 2.2}, // Target for sequence 20
+		{1.5, 1.6}, // Target for sequence 13
+		{1.6, 1.7}, // Target for sequence 14
+		{1.7, 1.8}, // Target for sequence 15
+		{1.8, 1.9}, // Target for sequence 16
+		{1.9, 2.0}, // Target for sequence 17
+		{2.0, 2.1}, // Target for sequence 18
+		{2.1, 2.2}, // Target for sequence 19
+		{2.2, 2.3}, // Target for sequence 20
 	}
 
 	// Create an RNN with 3 inputs, 3 hidden layers (with 12, 8, 5 neurons), and 2 outputs
-	rnn := NewRecurrentNeuralNetwork(3, []int{12, 8, 5}, 2, "relu")
+	rnn := NewRecurrentNeuralNetwork(3, []int{12, 8, 5}, 2, "relu", 0.001, 0.0)
 
 	// Train the RNN
-	rnn.train(trainingData, targets, 0.01, 10000)
+	rnn.train(trainingData, targets, 20000)
 
 	// Testing the RNN with new data
 	testInput := [][]float64{{0.3, 0.4, 0.5}}
