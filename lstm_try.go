@@ -30,7 +30,7 @@ func main() {
 	lstm.train(trainingData, targets, 20000)
 
 	// Testing the LSTM with new data
-	testInput := [][]float64{{0.3, 0.4, 0.5}}
+	testInput := [][]float64{{0.1, 0.2, 0.3}}
 	prediction := lstm.forward(testInput)
 	fmt.Printf("Test Input: %v, Prediction: %v\n", testInput, prediction)
 
