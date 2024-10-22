@@ -60,6 +60,7 @@ func main2() {
 	rnn.train(trainingData, targets, 20000)
 
 	// Testing the RNN with new data
+	fmt.Println("TESTING RNN...")
 	testInput := [][]float64{{0.3, 0.4, 0.5}}
 	prediction := rnn.forward(testInput)
 	fmt.Printf("Test Input: %v, Prediction: %v\n", testInput, prediction)
