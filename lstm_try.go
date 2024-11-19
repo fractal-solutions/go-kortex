@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func main() {
+func main2() {
 	// Initialize LSTM
 	inputSize := 3
 	hiddenLayers := []int{4, 4} // Example hidden layer sizes

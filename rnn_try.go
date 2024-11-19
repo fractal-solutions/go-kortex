@@ -4,7 +4,7 @@ import (
 	"fmt"
 )
 
-func main2() {
+func main1() {
 	// Example training data: sequences of inputs
 	trainingData := [][][]float64{
 		{{0.0, 0.1, 0.2}}, // Sequence 1
